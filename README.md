@@ -1,4 +1,4 @@
-# Multi Agent cooperation in Sequential Social Dilemma's
+# Multi Agent cooperation in Sequential Social Dilemmas
 
 ## Implemented Games
 
