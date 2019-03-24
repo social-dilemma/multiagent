@@ -22,12 +22,13 @@ import curses
 import sys
 import enum
 import argparse
-
 import numpy as np
 
 from pycolab import ascii_art, human_ui
-from pycolab.prefab_parts import sprites
 from ray.rllib.env import MultiAgentEnv
+
+from gym.spaces import Box, Discrete
+from environment.base_class import RewardSprite, Agent
 
 GAME_ART = ['#   0                #',
             '#             1      #']
@@ -40,21 +41,27 @@ class Actions(enum.IntEnum):
     LEFT = 3
     RIGHT = 4
 
-
 class ExampleEnvironment(MultiAgentEnv):
-    def __init__(self, num_agents=1):
-        self.num_agents = num_agents
+    def __init__(self, agents):
+        if len(agents) != 2:
+            raise Exception('The example environment must be inititalized with 2 agents')
+
+        self.agents = agents
         self.game = self._make_game()
 
     def _make_game(self):
         """Builds and returns a sample environment"""
+
+        sprites = {}
+        for agent in self.agents:
+            sprites[agent.char] = ascii_art.Partial(self.ExampleSprite, agent.index, len(self.agents))
+
         return ascii_art.ascii_art_to_game(
                 GAME_ART,
                 what_lies_beneath=' ',
-                sprites= {
-                    '0': ascii_art.Partial(PlayerSprite, 0, 2),
-                    '1': ascii_art.Partial(PlayerSprite, 1, 2) }
+                sprites = sprites
                 )
+
 
     def step(self, actions):
         """Takes in a dict of actions and converts them to a map update
@@ -73,45 +80,39 @@ class ExampleEnvironment(MultiAgentEnv):
         info: dict to pass extra info to gym
         """
 
-        import pdb; pdb.set_trace()
+        # step the environment using given actions
+        actions = [0, 1]
+        observation, reward, discount = self.game.play(actions)
+        del discount
 
-        # self.beam_pos = []
-        # agent_actions = {}
-        # for agent_id, action in actions.items():
-        #     agent_action = self.agents[agent_id].action_map(action)
-        #     agent_actions[agent_id] = agent_action
+        observations = {}
+        dones = {}
+        rewards = {}
+        info = {}
 
-        # # move
-        # self.update_moves(agent_actions)
+        for agent in self.agents:
+            view = observation.board
+            done = False
+            reward = reward
 
-        # for agent in self.agents.values():
-        #     pos = agent.get_pos()
-        #     new_char = agent.consume(self.world_map[pos[0], pos[1]])
-        #     self.world_map[pos[0], pos[1]] = new_char
+            # print(view)
+            # print(done)
+            # print(reward)
 
-        # # execute custom moves like firing
-        # self.update_custom_moves(agent_actions)
+            observations[agent.name] = view
+            dones[agent.name] = done
+            rewards[agent.name] = 0 #TODO
+            info[agent.name] = None
 
-        # # execute spawning events
-        # self.custom_map_update()
 
-        # map_with_agents = self.get_map_with_agents()
+        dones['__all__'] = self.game.game_over
 
-        # observations = {}
-        # rewards = {}
-        # dones = {}
-        # info = {}
-        # for agent in self.agents.values():
-        #     agent.grid = map_with_agents
-        #     rgb_arr = self.map_to_colors(agent.get_state(), self.color_map)
-        #     observations[agent.agent_id] = rgb_arr
-        #     rewards[agent.agent_id] = agent.compute_reward()
-        #     dones[agent.agent_id] = agent.get_done()
-        # dones["__all__"] = np.any(list(dones.values()))
-        # return observations, rewards, dones, info
+        return observations, rewards, dones, info
+
 
     def reset(self):
-        """Reset the environment.
+        """
+        Reset the environment.
 
         This method is performed in between rollouts. It resets the state of
         the environment.
@@ -124,81 +125,66 @@ class ExampleEnvironment(MultiAgentEnv):
         """
 
         self.game = self._make_game()
-        observation, reward, discount = game.its_showtime()
+        observation, reward, discount = self.game.its_showtime()
         del reward, discount
 
         # TODO: implement partial observability. Every agent currently
         #       gets the entire board
-        # TODO: Cleanup dictionary iteration
         observations = {}
-        observations = [observation] * self.num_agents
+        for agent in self.agents:
+            observations[agent.name] = observation.board
+        return observations
 
-        import pdb; pdb.set_trace()
+    class ExampleSprite(RewardSprite):
+        """ Sprite representing player for Pycolab """
 
-        # self.beam_pos = []
-        # self.agents = {}
-        # self.setup_agents()
-        # self.reset_map()
-        # self.custom_map_update()
+        def __init__(self, corner, position, character, index, n_unique):
+            super(ExampleEnvironment.ExampleSprite, self).__init__(corner, position, character, index, n_unique)
 
-        # map_with_agents = self.get_map_with_agents()
+        def update(self, actions, board, layers, backdrop, things, the_plot):
+            del layers, backdrop, things # unused
 
-        # observations = {}
-        # for agent in self.agents.values():
-        #     agent.grid = map_with_agents
-        #     # agent.grid = util.return_view(map_with_agents, agent.pos,
-        #     #                               agent.row_size, agent.col_size)
-        #     rgb_arr = self.map_to_colors(agent.get_state(), self.color_map)
-        #     observations[agent.agent_id] = rgb_arr
-        # return observations
+            if actions == None:
+                action = Actions.STAY
+            else:
+                action = actions[self.index]
+            del actions
 
+            # action update
+            if action == Actions.LEFT:
+                self._west(board, the_plot)
+            elif action == Actions.RIGHT:
+                self._east(board, the_plot)
 
-class RewardAgent(sprites.MazeWalker):
-    """ Sprite representing any player with unique actions and rewards """
-
-    def __init__(self, corner, position, character, index, n_unique):
-        self.index = index
-        self.n_unique = n_unique
-
-        super(RewardAgent, self).__init__(corner, position, character, impassable='#')
-
-    def update(self, actions, board, layers, backdrop, things, the_plot):
-        raise NotImplementedError
-
-    def reward(self, plot, value):
-        reward = np.zeros(self.n_unique)
-        reward[self.index] = value
-        plot.add_reward(reward)
+            # distribute reward
+            if self.position[1] == 1:
+                self.reward(the_plot, 1)
+                the_plot.terminate_episode()
+            elif self.position[1] == (self.corner[1] - 2):
+                self.reward(the_plot, 100)
+                the_plot.terminate_episode()
 
 
-class PlayerSprite(RewardAgent):
-    """ Sprite representing the player """
+class ExampleAgent(Agent):
+    """
+    Agent Representation for RLLib
+    """
+    def __init__(self, name, index, char):
+        super(ExampleAgent, self).__init__(name, index, char)
 
-    def __init__(self, corner, position, character, index, n_unique):
-        super(PlayerSprite, self).__init__(corner, position, character, index, n_unique)
+    @property
+    def action_space(self):
+        return Discrete(len(Actions))
 
-    def update(self, actions, board, layers, backdrop, things, the_plot):
-        del layers, backdrop, things # unused
-
-        if actions == None:
-            action = Actions.STAY
-        else:
-            action = actions[self.index]
-        del actions
-
-        # action update
-        if action == Actions.LEFT:
-            self._west(board, the_plot)
-        elif action == Actions.RIGHT:
-            self._east(board, the_plot)
-
-        # distribute reward
-        if self.position[1] == 1:
-            self.reward(the_plot, 1)
-            the_plot.terminate_episode()
-        elif self.position[1] == (self.corner[1] - 2):
-            self.reward(the_plot, 100)
-            the_plot.terminate_episode()
+    @property
+    def observation_space(self):
+        # TODO: Verify accuracy
+        #       might be 22, 2
+        return Box(
+                low=-1,
+                high=1,
+                shape=(2, 22),
+                dtype=np.float32)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Basic env to demonstrate pycolab to RLlib connection.')
