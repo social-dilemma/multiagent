@@ -1,18 +1,33 @@
 """
 Example.py
-
 Jared Weinstein
+
+An incredibly simple demonstration of an Pycolab environment
+that contains multiple agents receiving unique actions and
+rewards.
+
+Major Change: Actions and Rewards become indexed lists
+              game.play( [ LEFT, RIGHT ] )
+
+              Every agent with a matching INDEX value receives
+              the corresponding action. INDEX is determined by
+              the value passed upon Partial(...) initialization.
+
+              No safety checks are done to ensure that action and
+              reward lists have the correct length. Please
+              behave responsibly.
 """
 
 import curses
 import sys
 import enum
 import pdb
+import argparse
+
+import numpy as np
 
 from pycolab import ascii_art, human_ui
 from pycolab.prefab_parts import sprites
-
-import numpy as np
 
 GAME_ART = ['#   0                #',
             '#             1      #']
@@ -83,12 +98,14 @@ class PlayerSprite(RewardAgent):
             the_plot.terminate_episode()
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Basic env to demonstrate pycolab to RLlib connection.')
+    parser.add_argument('--live', action='store_true')
+    args = parser.parse_args()
     del sys.argv
-    is_live = True
 
     game = make_game()
 
-    if is_live:
+    if args.live:
         ui = human_ui.CursesUi(keys_to_actions=
                 {
                     curses.KEY_LEFT: [Actions.LEFT, Actions.STAY],
@@ -99,7 +116,7 @@ if __name__ == '__main__':
         ui.play(game)
         sys.exit()
 
-    if not is_live:
+    if not args.live:
         game.its_showtime()
         while not game.game_over:
             board, reward, discount = game.play([Actions.LEFT, Actions.STAY])
