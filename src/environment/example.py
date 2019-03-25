@@ -102,7 +102,6 @@ class ExampleEnvironment(MultiAgentEnv):
             observations[agent.name] = view
             dones[agent.name] = done
             rewards[agent.name] = 0 #TODO
-            info[agent.name] = None
 
 
         dones['__all__'] = self.game.game_over
