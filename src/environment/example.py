@@ -81,28 +81,27 @@ class ExampleEnvironment(MultiAgentEnv):
         """
 
         # step the environment using given actions
-        actions = [0, 1]
-        observation, reward, discount = self.game.play(actions)
-        del discount
+        actions = list(map(lambda a: actions[a.name], self.agents))
+        step_observations, step_rewards, step_discount = self.game.play(actions)
+        del step_discount
+
+        if step_rewards is None:
+           step_rewards = [0] * len(self.agents)
 
         observations = {}
         dones = {}
         rewards = {}
         info = {}
 
-        for agent in self.agents:
-            view = observation.board
+        for i in range(len(self.agents)):
+            observation = step_observations.board
             done = False
-            reward = reward
+            reward = step_rewards[i]
 
-            # print(view)
-            # print(done)
-            # print(reward)
-
-            observations[agent.name] = view
+            agent = self.agents[i]
+            observations[agent.name] = observation
             dones[agent.name] = done
-            rewards[agent.name] = 0 #TODO
-
+            rewards[agent.name] = reward
 
         dones['__all__'] = self.game.game_over
 
