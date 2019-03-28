@@ -15,7 +15,7 @@ from models.conv_to_fc_net import ConvToFCNet
 FLAGS = tf.app.flags.FLAGS
 
 tf.app.flags.DEFINE_string(
-    'exp_name', './results',
+    'exp_name', None,
     'Name of the ray_results experiment directory where results are stored.')
 tf.app.flags.DEFINE_string(
     'env', 'example',
@@ -48,7 +48,7 @@ tf.app.flags.DEFINE_boolean(
     'use_gpu_for_driver', False,
     'Set to true to run driver on GPU rather than CPU.')
 tf.app.flags.DEFINE_float(
-    'num_workers_per_device', 2,
+    'num_workers_per_device', 1,
     'Number of workers to place on a single device (CPU or GPU)')
 
 hyperparameters = {
@@ -144,6 +144,8 @@ def setup(env, hparams, algorithm, train_batch_size, num_cpus, num_gpus,
     return algorithm, env_name, config
 
 def main(unused_argv):
+    del unused_argv
+
     ray.init(num_cpus=FLAGS.num_cpus)
     hparams = hyperparameters[FLAGS.env]
 

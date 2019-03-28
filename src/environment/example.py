@@ -5,33 +5,19 @@ Jared Weinstein
 An incredibly simple demonstration of an Pycolab environment
 that contains multiple agents receiving unique actions and
 rewards.
-
-Major Change: Actions and Rewards become indexed lists
-              game.play( [ LEFT, RIGHT ] )
-
-              Every agent with a matching INDEX value receives
-              the corresponding action. INDEX is determined by
-              the value passed upon Partial(...) initialization.
-
-              No safety checks are done to ensure that action and
-              reward lists have the correct length. Please
-              behave responsibly.
 """
 
-import curses
-import sys
 import enum
-import argparse
 import numpy as np
 
-from pycolab import ascii_art, human_ui
+from pycolab import ascii_art
 from ray.rllib.env import MultiAgentEnv
 
 from gym.spaces import Box, Discrete
-from environment.base_class import RewardSprite, Agent
+from .util.base_class import RewardSprite, Agent
 
-GAME_ART = ['#   0                #',
-            '#             1      #']
+GAME_ART = ['#     0              #',
+            '#     1              #']
 
 class Actions(enum.IntEnum):
     """ Actions for the player """
@@ -95,7 +81,7 @@ class ExampleEnvironment(MultiAgentEnv):
 
         for i in range(len(self.agents)):
             observation = step_observations.board
-            done = False
+            done = self.game.game_over
             reward = step_rewards[i]
 
             agent = self.agents[i]
@@ -184,27 +170,3 @@ class ExampleAgent(Agent):
                 shape=(2, 22),
                 dtype=np.float32)
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Basic env to demonstrate pycolab to RLlib connection.')
-    parser.add_argument('--live', action='store_true')
-    args = parser.parse_args()
-    del sys.argv
-
-    env = ExampleEnvironment(2)
-    game = env.game
-
-    if args.live:
-        ui = human_ui.CursesUi(keys_to_actions=
-                {
-                    curses.KEY_LEFT: [Actions.LEFT, Actions.STAY],
-                    curses.KEY_RIGHT: [Actions.STAY, Actions.RIGHT],
-                    -1: [Actions.STAY, Actions.STAY]
-                },
-                delay=200)
-        ui.play(game)
-        sys.exit()
-
-    if not args.live:
-        game.its_showtime()
-        while not game.game_over:
-            board, reward, discount = game.play([Actions.LEFT, Actions.STAY])
