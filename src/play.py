@@ -15,14 +15,7 @@ COLORS = {
             '1': (0, 500, 100),     # Player 2
          }
 
-# Create agents
-agents = []
-for i in range(2):
-    name = 'agent-' + str(i)
-    agent = ExampleAgent(name, i, str(i))
-    agents.append(agent)
-
-env = ExampleEnvironment(agents)
+env = ExampleEnvironment()
 game = env.game
 
 ui = human_ui.CursesUi(

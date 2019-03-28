@@ -9,7 +9,7 @@ from ray.rllib.models import ModelCatalog
 from ray.tune import run_experiments
 from ray.tune.registry import register_env
 
-from environment.example import ExampleEnvironment, ExampleAgent
+from environment.example import ExampleEnvironment
 from models.conv_to_fc_net import ConvToFCNet
 
 FLAGS = tf.app.flags.FLAGS
@@ -67,17 +67,10 @@ def setup(env, hparams, algorithm, train_batch_size, num_cpus, num_gpus,
           num_agents, use_gpus_for_workers=False, use_gpu_for_driver=False,
           num_workers_per_device=1):
 
-    # Create agents
-    # TODO: Move agent construction to Environment
-    agents = []
-    for i in range(num_agents):
-        name = 'agent-' + str(i)
-        agent = ExampleAgent(name, i, str(i))
-        agents.append(agent)
-
     if env == 'example':
+        agents = ExampleEnvironment().agents
         def env_creator(_):
-            return ExampleEnvironment(agents)
+            return ExampleEnvironment()
     else:
         print('unknown environment')
         raise NotImplementedError

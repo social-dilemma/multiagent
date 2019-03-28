@@ -28,11 +28,14 @@ class Actions(enum.IntEnum):
     RIGHT = 4
 
 class ExampleEnvironment(MultiAgentEnv):
-    def __init__(self, agents):
-        if len(agents) != 2:
-            raise Exception('The example environment must be inititalized with 2 agents')
+    def __init__(self):
+        # create agents
+        self.agents = []
+        for i in range(2):
+            name = 'agent-' + str(i)
+            agent = ExampleAgent(name, i, str(i))
+            self.agents.append(agent)
 
-        self.agents = agents
         self.game = self._make_game()
 
     def _make_game(self):
@@ -47,7 +50,6 @@ class ExampleEnvironment(MultiAgentEnv):
                 what_lies_beneath=' ',
                 sprites = sprites
                 )
-
 
     def step(self, actions):
         """Takes in a dict of actions and converts them to a map update
