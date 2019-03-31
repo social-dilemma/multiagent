@@ -82,7 +82,7 @@ class ExampleEnvironment(MultiAgentEnv):
         info = {}
 
         for i in range(len(self.agents)):
-            observation = step_observations.board
+            observation = step_observations.board.tolist()
             done = self.game.game_over
             reward = step_rewards[i]
 
@@ -118,7 +118,7 @@ class ExampleEnvironment(MultiAgentEnv):
         #       gets the entire board
         observations = {}
         for agent in self.agents:
-            observations[agent.name] = observation.board
+            observations[agent.name] = observation.board.tolist()
         return observations
 
     class ExampleSprite(RewardSprite):
