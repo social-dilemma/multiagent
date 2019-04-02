@@ -6,7 +6,8 @@ from environment.example import *
 import argparse
 
 """
-for a human to play a specific game
+Quickly play a specific pygame environment using
+pygame's curses_ui visualizer
 """
 
 COLORS = {
