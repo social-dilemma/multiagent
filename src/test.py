@@ -63,31 +63,34 @@ class PrisonConfig():
         pygame.K_SPACE: Actions.PUNISH
     }
 
-def run(config, delay, interactive, pov='agent-0'):
+def run(config, delay, interactive, visualize, pov='agent-0'):
     # set up pygame grid environment
     env = config.env
-    width = env.game.cols * (WIDTH + MARGIN) + MARGIN
-    height = env.game.rows * (HEIGHT + MARGIN) + MARGIN
-    pygame.init()
-    clock = pygame.time.Clock()
-    screen = pygame.display.set_mode([width, height])
+    if visualize:
+        width = env.game.cols * (WIDTH + MARGIN) + MARGIN
+        height = env.game.rows * (HEIGHT + MARGIN) + MARGIN
+        pygame.init()
+        clock = pygame.time.Clock()
+        screen = pygame.display.set_mode([width, height])
 
     # setup artificial agents
 
     # reset pycolab game
     observations = env.reset()
-    grid = observations[pov]
-    _render(screen, grid, config.colors)
-    pygame.display.flip()
+    if visualize:
+        grid = observations[pov]
+        _render(screen, grid, config.colors)
+        pygame.display.flip()
 
     # primary game loop
     while not env.game.game_over:
         update = _update_game(env, interactive, config.action_map)
         obs, reward, dones = update
-        _render(screen, obs[pov], config.colors)
-        pygame.display.flip()
-        clock.tick(60)
-        time.sleep(delay)
+        if visualize:
+            _render(screen, obs[pov], config.colors)
+            pygame.display.flip()
+            clock.tick(60)
+            time.sleep(delay)
 
     print("FINAL REWARD:  {}".format(reward))
     pygame.quit()
@@ -147,8 +150,11 @@ def main(args):
     # Load trained models
     # TODO
 
+    if args.skip_visual:
+        args.delay = 0.0
+        args.interactivr = False
     if args.interactive: args.delay = 0.0
-    run(config, args.delay, args.interactive)
+    run(config, args.delay, args.interactive, not args.skip_visual)
 
 def parse_args():
     parser = argparse.ArgumentParser(description=
