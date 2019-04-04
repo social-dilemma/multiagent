@@ -1,6 +1,8 @@
 from pycolab.prefab_parts import sprites
 import numpy as np
 
+NO_ACTION = 0
+
 class RewardSprite(sprites.MazeWalker):
     """ Sprite representing any player with unique actions and rewards """
 
@@ -13,10 +15,18 @@ class RewardSprite(sprites.MazeWalker):
     def update(self, actions, board, layers, backdrop, things, the_plot):
         raise NotImplementedError
 
-    def reward(self, plot, value):
+    def reward(self, plot, value, index=None):
+        if index == None: index = self.index
         reward = np.zeros(self.n_unique)
-        reward[self.index] = value
+        reward[index] = value
         plot.add_reward(reward)
+
+    def my_action(self, actions):
+        if actions == None:
+            action = NO_ACTION # TODO: cleanup
+        else:
+            action = actions[self.index]
+        return action
 
 class Agent():
     """

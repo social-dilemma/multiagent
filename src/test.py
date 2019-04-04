@@ -9,10 +9,7 @@ import argparse
 import curses
 from pycolab import human_ui
 
-from environment.example import *
-
 import pygame
-import pdb
 import time
 
 BLACK = (  0,   0,   0)
@@ -26,6 +23,7 @@ HEIGHT = 20
 MARGIN = 5
 
 class ExampleConfig():
+    from environment.example import ExampleEnvironment, Actions
     env = ExampleEnvironment()
 
     colors = {
@@ -38,13 +36,32 @@ class ExampleConfig():
     }
 
     action_map = {
-        pygame.K_UP: Actions.UP,
-        pygame.K_DOWN: Actions.DOWN,
         pygame.K_RIGHT: Actions.RIGHT,
         pygame.K_LEFT: Actions.LEFT,
-        pygame.K_s: Actions.STAY
+        pygame.K_UP: Actions.STAY,
     }
 
+class PrisonConfig():
+    from environment.prison import PrisonEnvironment, Actions
+    env = PrisonEnvironment()
+
+    colors = {
+        '#': WHITE,          # Impassable wall
+        '0': GREEN,          # Player 1
+        '1': BLUE,           # Player 2
+        ' ': BLACK,          # Background
+        'C': GREEN,
+        'D': RED,
+        'missing': RED,
+        'background': BLACK
+    }
+
+    action_map = {
+        pygame.K_RIGHT: Actions.RIGHT,
+        pygame.K_LEFT: Actions.LEFT,
+        pygame.K_UP: Actions.STAY,
+        pygame.K_SPACE: Actions.PUNISH
+    }
 
 def run(config, delay, interactive, pov='agent-0'):
     # set up pygame grid environment
@@ -90,12 +107,11 @@ def _update_game(env, interactive, action_map):
         if not interactive or user_action != None:
             break
 
-    # get artificial agents actions
-    actions = {'agent-0': Actions.RIGHT, 'agent-1': Actions.LEFT}
+    # TODO: get artificial agents actions
+    actions = {'agent-0': 3, 'agent-1': 4}
 
     # override action with user input
     if interactive:
-        if user_action == None: user_action = Actions.STAY
         actions['agent-0'] = user_action
 
     # step the environment
@@ -120,12 +136,11 @@ def _render(screen, plot, colors):
             pygame.draw.rect(screen, color, [x, y, WIDTH, HEIGHT])
 
 def main(args):
-    configs = {
-        'example': ExampleConfig()
-    }
-
-    config = configs.get(args.env)
-    if config == None:
+    if args.env == 'example':
+        config = ExampleConfig()
+    elif args.env == 'prison':
+        config = PrisonConfig()
+    else:
         print('invalid environment')
         return
 

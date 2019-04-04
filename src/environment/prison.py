@@ -1,10 +1,8 @@
 """
-Example.py
+Prison.py
 Jared Weinstein
 
-A simple demonstration of a Pycolab environment
-that contains multiple agents receiving unique actions and
-rewards.
+An extended implementation of the Prisoner's Dilemma
 """
 
 import enum
@@ -16,24 +14,23 @@ from ray.rllib.env import MultiAgentEnv
 from gym.spaces import Box, Discrete
 from .util.base_class import RewardSprite, Agent
 
-GAME_ART = ['#     0              #',
-            '#     1              #']
+GAME_ART = ['#D        0        C#',
+            '#D        1        C#']
 
 class Actions(enum.IntEnum):
     """ Actions for the player """
     STAY = 0
-    UP = 1
-    DOWN = 2
+    PUNISH = 1
+    RIGHT = 2
     LEFT = 3
-    RIGHT = 4
 
-class ExampleEnvironment(MultiAgentEnv):
+class PrisonEnvironment(MultiAgentEnv):
     def __init__(self):
         # create agents
         self.agents = []
         for i in range(2):
             name = 'agent-' + str(i)
-            agent = ExampleAgent(name, i, str(i))
+            agent = PrisonAgent(name, i, str(i))
             self.agents.append(agent)
 
         self.game = self._make_game()
@@ -43,7 +40,7 @@ class ExampleEnvironment(MultiAgentEnv):
 
         sprites = {}
         for agent in self.agents:
-            sprites[agent.char] = ascii_art.Partial(self.ExampleSprite, agent.index, len(self.agents))
+            sprites[agent.char] = ascii_art.Partial(self.PrisonSprite, agent.index, len(self.agents))
 
         return ascii_art.ascii_art_to_game(
                 GAME_ART,
@@ -121,11 +118,11 @@ class ExampleEnvironment(MultiAgentEnv):
             observations[agent.name] = observation.board.tolist()
         return observations
 
-    class ExampleSprite(RewardSprite):
+    class PrisonSprite(RewardSprite):
         """ Sprite representing player for Pycolab """
 
         def __init__(self, corner, position, character, index, n_unique):
-            super(ExampleEnvironment.ExampleSprite, self).__init__(corner, position, character, index, n_unique)
+            super(PrisonEnvironment.PrisonSprite, self).__init__(corner, position, character, index, n_unique)
 
         def update(self, actions, board, layers, backdrop, things, the_plot):
             action = self.my_action(actions)
@@ -138,20 +135,20 @@ class ExampleEnvironment(MultiAgentEnv):
                 self._east(board, the_plot)
 
             # distribute reward
-            if self.position[1] == 1:
-                self.reward(the_plot, 1)
-                the_plot.terminate_episode()
-            elif self.position[1] == (self.corner[1] - 2):
-                self.reward(the_plot, 100)
-                the_plot.terminate_episode()
+
+            # if self.position[1] == 1:
+            #     self.reward(the_plot, 1)
+            # elif self.position[1] == (self.corner[1] - 2):
+            #     self.reward(the_plot, 100)
+            #     the_plot.terminate_episode()
 
 
-class ExampleAgent(Agent):
+class PrisonAgent(Agent):
     """
     Agent Representation for RLLib
     """
     def __init__(self, name, index, char):
-        super(ExampleAgent, self).__init__(name, index, char)
+        super(PrisonAgent, self).__init__(name, index, char)
 
     @property
     def action_space(self):
