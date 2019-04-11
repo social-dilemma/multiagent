@@ -19,10 +19,10 @@ class ConvToFCNet(Model):
 
         hiddens = [32, 32]
         with tf.name_scope("custom_net"):
-            inputs = slim.conv1d(
+            inputs = slim.conv2d(
                 inputs = inputs,
                 num_outputs = 6,
-                kernel_size = 3,
+                kernel_size = [3, 3],
                 stride = 1,
                 activation_fn=tf.nn.relu,
                 scope="conv")
