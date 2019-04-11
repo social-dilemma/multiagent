@@ -73,13 +73,20 @@ def run(config, delay, interactive, visualize, pov='agent-0'):
         clock = pygame.time.Clock()
         screen = pygame.display.set_mode([width, height])
 
+    # colors mapping
+    colors = config.colors
+    for key, value in env.mapping.items():
+        val = config.colors.get(chr(key))
+        del colors[chr(key)]
+        colors[value] = val
+
     # setup artificial agents
 
     # reset pycolab game
     observations = env.reset()
     if visualize:
         grid = observations[pov]
-        _render(screen, grid, config.colors)
+        _render(screen, grid, colors)
         pygame.display.flip()
 
     # primary game loop
@@ -87,7 +94,7 @@ def run(config, delay, interactive, visualize, pov='agent-0'):
         update = _update_game(env, interactive, config.action_map)
         obs, reward, dones = update
         if visualize:
-            _render(screen, obs[pov], config.colors)
+            _render(screen, obs[pov], colors)
             pygame.display.flip()
             clock.tick(60)
             time.sleep(delay)
@@ -127,10 +134,11 @@ def _render(screen, plot, colors):
     for n_row in range(len(plot)):
         row = plot[n_row]
         for n_col in range(len(row)):
-            char = chr(row[n_col])
+            char = (row[n_col])[0]
             if char in colors:
                 color = colors[char]
             else:
+                print(char)
                 print('missing color')
                 color = colors['missing']
 
