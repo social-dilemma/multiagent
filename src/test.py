@@ -95,22 +95,24 @@ class Visualizer():
         # setup pygame
         if self.visualize:
             width = env.game.cols * (WIDTH + MARGIN) + MARGIN
-            height = env.game.rows * (HEIGHT + MARGIN) + MARGIN
+            height = env.game.rows * (HEIGHT + MARGIN) + MARGIN + 20
             pygame.init()
             clock = pygame.time.Clock()
             screen = pygame.display.set_mode([width, height])
             # render first frame
             grid = state[self.pov]
-            self._render(screen, grid, self.colors)
+            self._render(screen, grid, None, self.colors)
             pygame.display.flip()
 
         # primary game loop
         while not env.game.game_over:
             update = self._update_game(env, state)
+            if update == None: break
             state, reward, dones = update
+            del dones
 
             if self.visualize:
-                self._render(screen, state[self.pov], self.colors)
+                self._render(screen, state[self.pov], reward, self.colors)
                 pygame.display.flip()
                 clock.tick(60)
                 time.sleep(self.delay)
@@ -154,6 +156,7 @@ class Visualizer():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
+                    return None
 
                 # get users actions
                 if event.type == pygame.KEYDOWN:
@@ -167,13 +170,16 @@ class Visualizer():
         # override action with user input
         if self.interactive:
             actions[self.pov] = user_action
-        print("ACTIONS {}".format(actions))
 
         # step the environment
-        state, reward, dones, infos = env.step(actions)
-        return (state, reward, dones)
+        state, rewards, dones, infos = env.step(actions)
 
-    def _render(self, screen, plot, colors):
+        print("ACTIONS {}".format(actions))
+        print("REWARDS {}\r\r".format(rewards))
+
+        return (state, rewards, dones)
+
+    def _render(self, screen, plot, reward, colors):
         screen.fill(colors['background'])
 
         for n_row in range(len(plot)):
@@ -190,6 +196,8 @@ class Visualizer():
                 x = (MARGIN + WIDTH) * n_col + MARGIN
                 y = (MARGIN + HEIGHT) * n_row + MARGIN
                 pygame.draw.rect(screen, color, [x, y, WIDTH, HEIGHT])
+
+        # TODO: display reward on screen
 
     """
     MARK: methods to help with setup
@@ -208,7 +216,7 @@ class Visualizer():
         register_env(env_name, env_creator.func)
         if env_name == 'example_env':
             setup = ExampleSetup()
-        elif args.env == 'prison_env':
+        elif env_name == 'prison_env':
             setup = PrisonSetup()
         else:
             print('invalid environment')
@@ -224,9 +232,16 @@ class Visualizer():
         ModelCatalog.register_custom_model("conv_to_fc_net", ConvToFCNet)
         config_run = config['env_config']['run']
         agent_cls = get_agent_class(config_run)
+        agent = agent_cls(env=env_name, config=config)
+        # TODO: The previous line is triggering the environment to
+        #       begin stepping which messes up the visualization.
+        #       My hacky solution is to wait till the print lines
+        #       have finished and then manually continued.
+        #       I'm mortified and hope that no one sees this.
+        #       But if you've made it this far... please help.
+        # import pdb; pdb.set_trace()
 
         # create the agent that will be used to compute the actions
-        agent = agent_cls(env=env_name, config=config)
         checkpoint = result_dir / ('checkpoint_' + args.checkpoint_num)
         checkpoint = checkpoint / ('checkpoint-' + args.checkpoint_num)
         print('Loading checkpoint', checkpoint)

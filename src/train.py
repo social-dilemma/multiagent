@@ -10,6 +10,7 @@ from ray.tune import run_experiments
 from ray.tune.registry import register_env
 
 from environment.example import ExampleEnvironment
+from environment.prison import PrisonEnvironment
 from models.conv_to_fc_net import ConvToFCNet
 
 FLAGS = tf.app.flags.FLAGS
@@ -18,7 +19,7 @@ tf.app.flags.DEFINE_string(
     'exp_name', None,
     'Name of the ray_results experiment directory where results are stored.')
 tf.app.flags.DEFINE_string(
-    'env', 'example',
+    'env', 'prison',
     'Name of the environment to rollout')
 tf.app.flags.DEFINE_string(
     'algorithm', 'A3C',
@@ -30,10 +31,10 @@ tf.app.flags.DEFINE_integer(
     'train_batch_size', 30000,
     'Size of the total dataset over which one epoch is computed.')
 tf.app.flags.DEFINE_integer(
-    'checkpoint_frequency', 5,
+    'checkpoint_frequency', 100,
     'Number of steps before a checkpoint is saved.')
 tf.app.flags.DEFINE_integer(
-    'training_iterations', 10,
+    'training_iterations', 2000,
     'Total number of steps to train for')
 tf.app.flags.DEFINE_integer(
     'num_cpus', 4,
@@ -59,8 +60,11 @@ hyperparameters = {
     'harvest': {
         'lr_init': 0.00136,
         'lr_final': 0.000028,
+        'entropy_coeff': -.000687},
+    'prison': {
+        'lr_init': 0.00136,
+        'lr_final': 0.000028,
         'entropy_coeff': -.000687}}
-
 
 
 def setup(env, hparams, algorithm, train_batch_size, num_cpus, num_gpus,
@@ -71,6 +75,10 @@ def setup(env, hparams, algorithm, train_batch_size, num_cpus, num_gpus,
         agents = ExampleEnvironment().agents
         def env_creator(_):
             return ExampleEnvironment()
+    elif env == 'prison':
+        agents = PrisonEnvironment().agents
+        def env_creator(_):
+            return PrisonEnvironment()
     else:
         print('unknown environment')
         raise NotImplementedError
