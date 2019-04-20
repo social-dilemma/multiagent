@@ -31,10 +31,10 @@ tf.app.flags.DEFINE_integer(
     'train_batch_size', 30000,
     'Size of the total dataset over which one epoch is computed.')
 tf.app.flags.DEFINE_integer(
-    'checkpoint_frequency', 100,
+    'checkpoint_frequency', 30,
     'Number of steps before a checkpoint is saved.')
 tf.app.flags.DEFINE_integer(
-    'training_iterations', 2000,
+    'training_iterations', 200,
     'Total number of steps to train for')
 tf.app.flags.DEFINE_integer(
     'num_cpus', 4,
@@ -76,9 +76,11 @@ def setup(env, hparams, algorithm, train_batch_size, num_cpus, num_gpus,
         def env_creator(_):
             return ExampleEnvironment()
     elif env == 'prison':
-        agents = PrisonEnvironment().agents
+        can_punish = False
+        manual_action = None
+        agents = PrisonEnvironment(can_punish, manual_action).agents
         def env_creator(_):
-            return PrisonEnvironment()
+            return PrisonEnvironment(can_punish, manual_action)
     else:
         print('unknown environment')
         raise NotImplementedError
@@ -133,6 +135,7 @@ def setup(env, hparams, algorithm, train_batch_size, num_cpus, num_gpus,
                 "num_cpus_for_driver": cpus_for_driver,
                 "num_gpus_per_worker": num_gpus_per_worker,   # Can be a fraction
                 "num_cpus_per_worker": num_cpus_per_worker,   # Can be a fraction
+                "gamma": 0.99, # Discount factor
                 "entropy_coeff": hparams['entropy_coeff'],
                 "multiagent": {
                     "policy_graphs": policy_graphs,

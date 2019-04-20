@@ -21,11 +21,11 @@ class RewardSprite(sprites.MazeWalker):
         reward[index] = value
         plot.add_reward(reward)
 
-    def my_action(self, actions):
+    def action(self, actions, index):
         if actions == None:
-            action = NO_ACTION # TODO: cleanup
+            action = NO_ACTION
         else:
-            action = actions[self.index]
+            action = actions[index]
         return action
 
 class Agent():

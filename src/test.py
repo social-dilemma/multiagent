@@ -239,7 +239,7 @@ class Visualizer():
         #       have finished and then manually continued.
         #       I'm mortified and hope that no one sees this.
         #       But if you've made it this far... please help.
-        # import pdb; pdb.set_trace()
+        import pdb; pdb.set_trace()
 
         # create the agent that will be used to compute the actions
         checkpoint = result_dir / ('checkpoint_' + args.checkpoint_num)

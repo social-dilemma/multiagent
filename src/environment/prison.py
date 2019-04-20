@@ -7,6 +7,7 @@ An extended implementation of the Prisoner's Dilemma
 
 import enum
 import numpy as np
+import collections
 
 from pycolab import ascii_art
 from ray.rllib.env import MultiAgentEnv
@@ -25,8 +26,14 @@ class Actions(enum.IntEnum):
     RIGHT = 2
     LEFT = 3
 
+class Action_Mode(enum.IntEnum):
+    COOPERATE = 0
+    DEFECT = 1
+    TRAINED = 2
+    TIT_TAT = 3
+
 class PrisonEnvironment(Dilemma):
-    def __init__(self):
+    def __init__(self, can_punish=False, overide_action=None):
         # create agents
         agents = []
         for i in range(2):
@@ -36,8 +43,19 @@ class PrisonEnvironment(Dilemma):
 
         # create pycolab sprite for each agent
         sprites = {}
-        for agent in agents:
-            sprites[agent.char] = ascii_art.Partial(self.PrisonSprite, agent.index, len(agents))
+        for i in range(len(agents)):
+            agent = agents[i]
+            action_mode = Action_Mode.TRAINED
+
+            # manually override agent-0 actions
+            if i == 0 and override_action is not None:
+                action_mode = override_action
+
+            sprites[agent.char] = ascii_art.Partial(self.PrisonSprite,
+                                                    agent.index,
+                                                    len(agents),
+                                                    can_punish,
+                                                    action_mode)
 
         super(PrisonEnvironment, self).__init__(GAME_ART, agents, sprites)
 
@@ -45,34 +63,50 @@ class PrisonEnvironment(Dilemma):
     class PrisonSprite(RewardSprite):
         COOPERATION_MULTIPLE = .75
         SELFISH_MULTIPLE = 1
-        CAN_PUNISH = True
+        REWARD_PERIOD = 10
+        HISTORY_LEN = 3
 
         """ Sprite representing player for Pycolab """
 
-        def __init__(self, corner, position, character, index, n_unique):
+        def __init__(self, corner, position, character, index, n_unique, can_punish=False, action_mode="trained"):
             self.step = 0
-            self.reward_period = 10
+            self.can_punish = can_punish
+            self.action_mode = action_mode
+
+            if action_mode == Action_Mode.TIT_TAT:
+                self.move_history = collections.deque(
+                        self.HISTORY_LEN * [Actions.STAY], self.HISTORY_LEN)
 
             super(PrisonEnvironment.PrisonSprite, self).__init__(corner, position, character, index, n_unique)
 
         def update(self, actions, board, layers, backdrop, things, the_plot):
-            action = self.my_action(actions)
+            action = self.action(actions, self.index)
             # del layers, backdrop, things, actions
 
             self.step += 1
             opponent = self.index ^ 1
+
+            # override action if necessary
+            if self.action_mode == Action_Mode.COOPERATE:
+                action = Actions.RIGHT
+            elif self.action_mode == Action_Mode.DEFECT:
+                action = Actions.LEFT
+            elif self.action_mode == Action_Mode.TIT_TAT:
+                opponent_action = self.action(actions, opponent)
+                self.move_history.append(opponent_action)
+                action = self.move_history[0]
 
             # action update
             if action == Actions.LEFT:
                 self._west(board, the_plot)
             elif action == Actions.RIGHT:
                 self._east(board, the_plot)
-
-            elif self.CAN_PUNISH and action == Actions.PUNISH:
+            elif self.can_punish and action == Actions.PUNISH:
                 self.reward(the_plot, -1, opponent)
 
+
             # calculate reward
-            if self.step % self.reward_period == 0:
+            if self.step % self.REWARD_PERIOD == 0:
                 my_pos = things[str(self.index)].position[1] - 1
                 op_pos = things[str(opponent)].position[1] - 1
                 max_pos = len(GAME_ART[0]) - 3
