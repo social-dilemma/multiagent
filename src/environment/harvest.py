@@ -2,9 +2,9 @@
 Harvest.py
 Jared Weinstein
 
-A simple demonstration of a Pycolab environment
-that contains multiple agents receiving unique actions and
-rewards.
+INCOMPLETE implementation of a shared resource dilemma.
+Agents must sustainably harvest apples that respawn in proportion
+to how many exist
 """
 
 import enum
@@ -68,7 +68,11 @@ class Actions(enum.IntEnum):
     PUNISH = 5
 
 class HarvestEnvironment(Dilemma):
+
     def __init__(self):
+        print("Harvest Environment is incomplete")
+        raise NotImplementedError
+
         # create agents
         agents = []
         for i in range(2):

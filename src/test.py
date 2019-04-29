@@ -2,7 +2,8 @@
 test.py
 Jared Weinstein
 
-Play with a trained agent
+Renders an instance of an environment and trained agent
+Pygame renders frontend of the game and handles user input
 """
 
 import pygame
@@ -21,9 +22,6 @@ from ray.tune.registry import register_env
 
 from models.conv_to_fc_net import ConvToFCNet
 from config import *
-
-# TODO:
-# 1. can state be gotten through the env variable
 
 def _get_rllib_config(path):
     """Return the data from the specified rllib configuration file."""
@@ -232,14 +230,19 @@ class Visualizer():
         ModelCatalog.register_custom_model("conv_to_fc_net", ConvToFCNet)
         config_run = config['env_config']['run']
         agent_cls = get_agent_class(config_run)
+        print(
+            """ WARNING: the script is about to instantiate the A3C agents
+                  however this has undersired asynchronous behavior as they
+                  simultaneously interact with the environment. Please wait until
+                  all interactions have finished before continuing. Apologies
+                  this is an error that needs to be fixed
+            """)
+        import pdb.set_trace()
         agent = agent_cls(env=env_name, config=config)
-        # TODO: The previous line is triggering the environment to
-        #       begin stepping which messes up the visualization.
-        #       My hacky solution is to wait till the print lines
-        #       have finished and then manually continued.
-        #       I'm mortified and hope that no one sees this.
-        #       But if you've made it this far... please help.
         import pdb; pdb.set_trace()
+        # TODO: My hacky solution is to wait till the print lines
+        #       have finished and then manually continue.
+        #       This needs to be fixed.
 
         # create the agent that will be used to compute the actions
         checkpoint = result_dir / ('checkpoint_' + args.checkpoint_num)
@@ -256,8 +259,6 @@ class Visualizer():
         agent_dict['policy_map'] = policy_agent_map
         agent_dict['init_state'] = state_init
         return agent, agent_dict
-
-
 
 
 def parse_args():

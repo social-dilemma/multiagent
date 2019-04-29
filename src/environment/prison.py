@@ -3,6 +3,8 @@ Prison.py
 Jared Weinstein
 
 An extended implementation of the Prisoner's Dilemma
+The right side of the board represents cooperative behavior
+The left side of the board is selfish defective behavior
 """
 
 import enum
@@ -48,8 +50,8 @@ class PrisonEnvironment(Dilemma):
             action_mode = Action_Mode.TRAINED
 
             # manually override agent-0 actions
-            if i == 0 and override_action is not None:
-                action_mode = override_action
+            if i == 0 and overide_action is not None:
+                action_mode = overide_action
 
             sprites[agent.char] = ascii_art.Partial(self.PrisonSprite,
                                                     agent.index,

@@ -1,8 +1,24 @@
-# Multi Agent cooperation in Sequential Social Dilemmas
+# Multi-Agent Cooperation in Sequential Social Dilemmas
 
-## Implemented Games
+This work is a implementation and exploration of current work in Multiagent
+Reinforcement Learning (MARL). It is highly recommended that you read the following
+two papers before diving in.
+1. [Multi-agent reinforcement learning in sequential social dilemmas](https://arxiv.org/abs/1702.03037)
+2. [Intrinsic Social Motivation via Causal Influence in Multi-Agent RL](https://arxiv.org/abs/1810.08647)
 
-## Setup Instructions
+## Environments
+
+Pycolab provides the abstraction for creating environments. This repository includes two functional
+environments. ExampleEnvironment is a simple two player interaction. PrisonEnvironment is
+a continuous two player prisoners dilemma
+
+The play script allows you to quickly test an environment manually: an
+extremely useful tool when debugging.
+
+## Learning
+
+Reinforcement Learning is handled by RLLib. Currently all training is done using
+the A3C algorithm.
 
 ## Related Works
 
@@ -12,4 +28,4 @@
 
 3. Jaques, N., Lazaridou, A., Hughes, E., Gulcehre, C., Ortega, P. A., Strouse, D. J., Leibo, J. Z. & de Freitas, N. (2018). [Intrinsic Social Motivation via Causal Influence in Multi-Agent RL](https://arxiv.org/abs/1810.08647). arXiv preprint arXiv:1810.08647.
 
-Credit to [Sequential Social Dilemma Games](https://github.com/eugenevinitsky/sequential_social_dilemma_games) for providing a useful example of RLLib. Some code has been reused from this repository.
+4. Credit to [Sequential Social Dilemma Games](https://github.com/eugenevinitsky/sequential_social_dilemma_games) for providing a useful example of RLLib.

@@ -31,10 +31,10 @@ tf.app.flags.DEFINE_integer(
     'train_batch_size', 30000,
     'Size of the total dataset over which one epoch is computed.')
 tf.app.flags.DEFINE_integer(
-    'checkpoint_frequency', 30,
+    'checkpoint_frequency', 100,
     'Number of steps before a checkpoint is saved.')
 tf.app.flags.DEFINE_integer(
-    'training_iterations', 200,
+    'training_iterations', 1500,
     'Total number of steps to train for')
 tf.app.flags.DEFINE_integer(
     'num_cpus', 4,
@@ -135,7 +135,7 @@ def setup(env, hparams, algorithm, train_batch_size, num_cpus, num_gpus,
                 "num_cpus_for_driver": cpus_for_driver,
                 "num_gpus_per_worker": num_gpus_per_worker,   # Can be a fraction
                 "num_cpus_per_worker": num_cpus_per_worker,   # Can be a fraction
-                "gamma": 0.99, # Discount factor
+                "gamma": hparams['gamma'], # Discount factor
                 "entropy_coeff": hparams['entropy_coeff'],
                 "multiagent": {
                     "policy_graphs": policy_graphs,
@@ -150,40 +150,44 @@ def setup(env, hparams, algorithm, train_batch_size, num_cpus, num_gpus,
 def main(unused_argv):
     del unused_argv
 
+    gamma = [.9, .99, .999]
+    entropy = [-.05, 0.005, 0.0005, -.00005]
+
     ray.init(num_cpus=FLAGS.num_cpus)
-    hparams = hyperparameters[FLAGS.env]
 
-    alg_run, env_name, config = setup(FLAGS.env, hparams, FLAGS.algorithm,
-                                      FLAGS.train_batch_size,
-                                      FLAGS.num_cpus,
-                                      FLAGS.num_gpus, FLAGS.num_agents,
-                                      FLAGS.use_gpus_for_workers,
-                                      FLAGS.use_gpu_for_driver,
-                                      FLAGS.num_workers_per_device)
+    for g in gamma:
+        for e in entropy:
 
-    if FLAGS.exp_name is None:
-        exp_name = FLAGS.env + '_' + FLAGS.algorithm
-    else:
-        exp_name = FLAGS.exp_name
-    print('Commencing experiment', exp_name)
+            hparams = hyperparameters[FLAGS.env]
+            hparams['gamma'] = g
+            hparams['entropy_coeff'] = e
 
-    run_experiments({
-        exp_name: {
-            "run": alg_run,
-            "env": env_name,
-            "stop": {
-                "training_iteration": FLAGS.training_iterations
-            },
-            'checkpoint_freq': FLAGS.checkpoint_frequency,
-            "config": config,
-        }
-    })
+            alg_run, env_name, config = setup(FLAGS.env, hparams, FLAGS.algorithm,
+                                              FLAGS.train_batch_size,
+                                              FLAGS.num_cpus,
+                                              FLAGS.num_gpus, FLAGS.num_agents,
+                                              FLAGS.use_gpus_for_workers,
+                                              FLAGS.use_gpu_for_driver,
+                                              FLAGS.num_workers_per_device)
+
+            if FLAGS.exp_name is None:
+                exp_name = FLAGS.env + '_' + FLAGS.algorithm
+            else:
+                exp_name = FLAGS.exp_name
+            print('Commencing experiment', exp_name)
+
+            run_experiments({
+                exp_name: {
+                    "run": alg_run,
+                    "env": env_name,
+                    "stop": {
+                        "training_iteration": FLAGS.training_iterations
+                    },
+                    'checkpoint_freq': FLAGS.checkpoint_frequency,
+                    "config": config,
+                }
+            })
 
 if __name__ == "__main__":
-
-    """ load arguments """
-    parser = argparse.ArgumentParser(description='Train and play multiagent sequential dilemma')
-    args = parser.parse_args()
-
     tf.app.run(main)
 
