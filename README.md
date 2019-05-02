@@ -1,6 +1,6 @@
 # Multi-Agent Cooperation in Sequential Social Dilemmas
 
-(More Information)[http://zoo.cs.yale.edu/classes/cs490/18-19b/weinstein.jared.jtw37]
+This project was completed as part of the senior requirement for Yale Computer Science. Spring 2019. [More Information](http://zoo.cs.yale.edu/classes/cs490/18-19b/weinstein.jared.jtw37)
 
 This work is an implementation and exploration of current work in Multiagent Reinforcement Learning (MARL). It is highly recommended that you read the following two papers before diving in.
 1. [Multi-agent reinforcement learning in sequential social dilemmas](https://arxiv.org/abs/1702.03037)
@@ -11,11 +11,9 @@ This work is an implementation and exploration of current work in Multiagent Rei
 1. Switch to your virtual env
 2. `pip install -r requirements.txt`
 3. `python train.py`
-4. `python test.py ~/ray_results/prison_A3C/[training_instance]/
-   [checkpoint_num]`
+4. `python test.py ~/ray_results/prison_A3C/[training_instance]/ [checkpoint_num]`
 
 Training results are usually saved in your ray_results directory located in the root directory
-
 
 ## Environments
 
@@ -29,8 +27,7 @@ positions are a linear combination of the extremes. Rewards are distributed ever
 10 timesteps of the game. The figure below shows the corresponding rewards for
 four primary states of the game.
 
-![Alt text](resources/prisoners_gamestate.png?raw=true "4 primary game states
-and corresponding rewards"){:height="50%" width="50%"}
+![Game states](resources/prisoners_gamestate.png?raw=true)
 
 `python play.py` allows you to quickly run a manual version of the game. The
 script is extremely helpful when debugging the environment alone.
@@ -43,11 +40,7 @@ the A3C algorithm.
 
 ## Unresolved Issues
 
-The test.py script has an issue where multiple asynchronous agents simultaneousy
-interact with the environment. This messes up the visualization. One potential
-solution is to wait until the interactions with the environment have finished
-before starting the game. This only takes a few seconds. The better solution
-would be to fix the issue and submit a PR!
+When initializing A3C agents in `test.py`, asynchronous changes to the environment mess with the game visualization. One potential solution is to wait until the interactions with the environment have finished before starting the game. This only takes a few seconds. The better solution would be to fix the issue and submit a PR!
 
 ## Related Works
 
