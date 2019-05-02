@@ -92,25 +92,28 @@ class Visualizer():
 
         # setup pygame
         if self.visualize:
-            width = env.game.cols * (WIDTH + MARGIN) + MARGIN
-            height = env.game.rows * (HEIGHT + MARGIN) + MARGIN + 20
+            self.width = env.game.cols * (WIDTH + MARGIN) + MARGIN
+            self.height = env.game.rows * (HEIGHT + MARGIN) + MARGIN + HEIGHT
             pygame.init()
+            pygame.font.init()
             clock = pygame.time.Clock()
-            screen = pygame.display.set_mode([width, height])
+            screen = pygame.display.set_mode([self.width, self.height])
             # render first frame
             grid = state[self.pov]
             self._render(screen, grid, None, self.colors)
             pygame.display.flip()
 
         # primary game loop
+        cumulative_reward = {}
         while not env.game.game_over:
             update = self._update_game(env, state)
             if update == None: break
             state, reward, dones = update
+            cumulative_reward = self._update_reward(cumulative_reward, reward)
             del dones
 
             if self.visualize:
-                self._render(screen, state[self.pov], reward, self.colors)
+                self._render(screen, state[self.pov], cumulative_reward, self.colors)
                 pygame.display.flip()
                 clock.tick(60)
                 time.sleep(self.delay)
@@ -121,10 +124,17 @@ class Visualizer():
     """
     MARK: helper methods for core game loop
     """
+    def _update_reward(self, cumulative, reward):
+        for item in reward.keys():
+            if cumulative.get(item) == None:
+                cumulative[item] = 0
+            cumulative[item] += reward[item]
+        return cumulative
+
     def _agent_actions(self, state):
         policy_agent_mapping = self.agent_info['policy_map']
         use_lstm = self.agent_info['use_lstm']
-        state_init = self.agent_info['init_state'] # TODO: does this need to get updated directly
+        state_init = self.agent_info['init_state']
         agent = self.agent
 
         action_dict = {}
@@ -173,7 +183,7 @@ class Visualizer():
         state, rewards, dones, infos = env.step(actions)
 
         print("ACTIONS {}".format(actions))
-        print("REWARDS {}\r\r".format(rewards))
+        print("REWARDS {}".format(rewards))
 
         return (state, rewards, dones)
 
@@ -195,7 +205,19 @@ class Visualizer():
                 y = (MARGIN + HEIGHT) * n_row + MARGIN
                 pygame.draw.rect(screen, color, [x, y, WIDTH, HEIGHT])
 
-        # TODO: display reward on screen
+        # Display the font on the screen
+        # TODO: this section can be generalized
+        if reward == None:
+            return
+        myfont = pygame.font.SysFont('menlo', 56)
+        text_0 = str(reward['agent-0'])
+        text_1 = str(reward['agent-1'])
+        surface_0 = myfont.render(text_0, False, colors[2])
+        surface_1 = myfont.render(text_1, False, colors[3])
+        rect_0 = surface_0.get_rect(center=(self.width * (1/4), self.height - (HEIGHT / 2)))
+        rect_1 = surface_1.get_rect(center=(self.width * (3/4), self.height - (HEIGHT / 2)))
+        screen.blit(surface_0, rect_0)
+        screen.blit(surface_1, rect_1)
 
     """
     MARK: methods to help with setup
@@ -231,13 +253,13 @@ class Visualizer():
         config_run = config['env_config']['run']
         agent_cls = get_agent_class(config_run)
         print(
-            """ WARNING: the script is about to instantiate the A3C agents
-                  however this has undersired asynchronous behavior as they
-                  simultaneously interact with the environment. Please wait until
-                  all interactions have finished before continuing. Apologies
-                  this is an error that needs to be fixed
+            """
+            WARNING: the script is about to instantiate the A3C agents
+            however this has undersired asynchronous behavior as they
+            simultaneously interact with the environment. Please wait until
+            all interactions have finished before continuing.
             """)
-        import pdb.set_trace()
+        import pdb; pdb.set_trace()
         agent = agent_cls(env=env_name, config=config)
         import pdb; pdb.set_trace()
         # TODO: My hacky solution is to wait till the print lines

@@ -34,7 +34,7 @@ tf.app.flags.DEFINE_integer(
     'checkpoint_frequency', 100,
     'Number of steps before a checkpoint is saved.')
 tf.app.flags.DEFINE_integer(
-    'training_iterations', 1500,
+    'training_iterations', 500,
     'Total number of steps to train for')
 tf.app.flags.DEFINE_integer(
     'num_cpus', 4,
@@ -151,13 +151,14 @@ def main(unused_argv):
     del unused_argv
 
     gamma = [.9, .99, .999]
-    entropy = [-.05, 0.005, 0.0005, -.00005]
+    entropy = [.05, 0.005, 0.0005, .00005]
 
     ray.init(num_cpus=FLAGS.num_cpus)
 
     for g in gamma:
         for e in entropy:
 
+            print("START: {}, {}".format(g, e))
             hparams = hyperparameters[FLAGS.env]
             hparams['gamma'] = g
             hparams['entropy_coeff'] = e

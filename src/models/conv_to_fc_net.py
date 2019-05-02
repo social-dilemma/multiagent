@@ -1,9 +1,9 @@
-# Model taken from https://arxiv.org/pdf/1810.08647.pdf,
+# Model initially implemented by Eugene Vinitsky
+# https://github.com/eugenevinitsky/sequential_social_dilemma_games
+
+# https://arxiv.org/pdf/1810.08647.pdf,
 # INTRINSIC SOCIAL MOTIVATION VIA CAUSAL
 # INFLUENCE IN MULTI-AGENT RL
-
-# model is a single convolutional layer with a kernel of size 3, stride of size 1, and 6 output
-# channels. This is connected to two fully connected layers of size 32 each
 
 import tensorflow as tf
 
